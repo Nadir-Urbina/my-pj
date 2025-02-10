@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { FileText, Image as ImageIcon, AudioWaveform } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { ShareDialog } from "../components/share-dialog"
+import { ShareEntryDialog } from "../components/share-entry-dialog"
 
 interface JournalEntry {
   id: string
@@ -73,11 +73,7 @@ export default function DashboardPage() {
         {filteredEntries.map((entry) => (
           <div key={entry.id} className="border rounded-lg p-4 flex flex-col relative">
             <div className="absolute top-4 right-4 z-10">
-              <ShareDialog 
-                entryId={entry.id}
-                entryTitle={entry.title}
-                iconOnly
-              />
+              <ShareEntryDialog entryId={entry.id} />
             </div>
 
             <div 

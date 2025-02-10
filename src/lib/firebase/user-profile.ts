@@ -19,9 +19,16 @@ export interface UserProfile {
   lastActive: string
 }
 
-export async function createUserProfile(userId: string, profile: UserProfile) {
-  const userRef = doc(db, 'users', userId)
-  await setDoc(userRef, profile)
+export const createUserProfile = async (userId: string, userData: any) => {
+  const userProfile = {
+    ...userData,
+    // Add lowercase fields for searching
+    emailLower: userData.email.toLowerCase(),
+    displayNameLower: userData.fullName.toLowerCase(),
+  }
+  
+  // Create the user profile
+  await setDoc(doc(db, "users", userId), userProfile)
 }
 
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>) {
