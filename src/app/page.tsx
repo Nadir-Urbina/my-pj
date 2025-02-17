@@ -22,56 +22,56 @@ const stagger = {
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Navigation */}
-      <header className="border-b">
-        <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold">My Prophetic Journal</div>
-          <div className="flex gap-4 items-center">
-            <ThemeToggle />
-            <Link href="/auth">
-              <Button variant="ghost">Login</Button>
-            </Link>
-            <Link href="/auth">
-              <Button>Get Started</Button>
+    <main>
+      {/* Hero Section with gradient background */}
+      <div className="relative min-h-[70vh]">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950 dark:via-purple-950 dark:to-pink-950">
+          {/* Optional subtle grid pattern */}
+          <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-800/50 bg-[size:20px_20px]"></div>
+        </div>
+
+        {/* Content */}
+        <div className="relative pt-8 pb-8 sm:pt-16 sm:pb-12 lg:pb-16 container mx-auto px-4">
+          {/* Navigation stays at the top */}
+          <nav className="flex justify-between items-center mb-12">
+            <h1 className="text-xl font-semibold dark:text-white">My Prophetic Journal</h1>
+            <div className="flex gap-4 items-center">
+              <ThemeToggle />
+              <Link href="/auth" className="text-sm font-medium dark:text-gray-200">
+                Login
+              </Link>
+              <Link 
+                href="/auth"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Get Started
+              </Link>
+            </div>
+          </nav>
+
+          {/* Hero content */}
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
+              Document Your Spiritual Journey
+            </h2>
+            <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+              "Write the vision and make it plain upon tablets" - Habakkuk 2:2
+            </p>
+            <Link
+              href="/start-your-journal"
+              className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors duration-200"
+            >
+              Start Your Journal
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </div>
-        </nav>
-      </header>
-
-      {/* Hero Section */}
-      <motion.section 
-        className="py-20 px-4"
-        initial="initial"
-        animate="animate"
-        variants={stagger}
-      >
-        <div className="container mx-auto text-center">
-          <motion.h1 
-            className="text-5xl font-bold mb-6"
-            variants={fadeIn}
-          >
-            Document Your Spiritual Journey
-          </motion.h1>
-          <motion.p 
-            className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
-            variants={fadeIn}
-          >
-            "Write the vision and make it plain upon tablets" - Habakkuk 2:2
-          </motion.p>
-          <motion.div variants={fadeIn}>
-            <Link href="/auth">
-              <Button size="lg" className="gap-2">
-                Start Your Journal <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
         </div>
-      </motion.section>
+      </div>
 
       {/* Features Section */}
       <motion.section 
-        className="py-20 bg-muted/50"
+        className="py-20 bg-gradient-to-br from-gray-50 via-transparent to-gray-50 dark:from-gray-900/50 dark:via-transparent dark:to-gray-900/50"
         initial="initial"
         whileInView="animate"
         viewport={{ once: true }}
@@ -79,29 +79,29 @@ export default function Home() {
       >
         <div className="container mx-auto px-4">
           <motion.h2 
-            className="text-3xl font-bold text-center mb-12"
+            className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white"
             variants={fadeIn}
           >
             Features
           </motion.h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <FeatureCard
-              icon={<BookMarked />}
+              icon={<BookMarked className="text-blue-600 dark:text-blue-400" />}
               title="Never Forget"
               description="Record and preserve your spiritual experiences, dreams, and visions"
             />
             <FeatureCard
-              icon={<Users />}
+              icon={<Users className="text-blue-600 dark:text-blue-400" />}
               title="Team Collaboration"
               description="Enable your team with broader spiritual intel and insights"
             />
             <FeatureCard
-              icon={<Brain />}
+              icon={<Brain className="text-blue-600 dark:text-blue-400" />}
               title="Issachar Generation"
               description="Be part of those who understand the times and know what to do"
             />
             <FeatureCard
-              icon={<CloudLightning />}
+              icon={<CloudLightning className="text-blue-600 dark:text-blue-400" />}
               title="Prophetic Insights"
               description="Track patterns and revelations in your spiritual journey"
             />
@@ -111,7 +111,7 @@ export default function Home() {
 
       {/* Testimonials Section */}
       <motion.section 
-        className="py-20"
+        className="py-20 bg-white dark:bg-black"
         initial="initial"
         whileInView="animate"
         viewport={{ once: true }}
@@ -119,7 +119,7 @@ export default function Home() {
       >
         <div className="container mx-auto px-4">
           <motion.h2 
-            className="text-3xl font-bold text-center mb-12"
+            className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white"
             variants={fadeIn}
           >
             What People Are Saying
@@ -146,7 +146,7 @@ export default function Home() {
 
       {/* Pricing Section */}
       <motion.section 
-        className="py-20 bg-muted/50"
+        className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950 dark:via-purple-950 dark:to-pink-950"
         initial="initial"
         whileInView="animate"
         viewport={{ once: true }}
@@ -154,7 +154,7 @@ export default function Home() {
       >
         <div className="container mx-auto px-4">
           <motion.h2 
-            className="text-3xl font-bold text-center mb-12"
+            className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white"
             variants={fadeIn}
           >
             Simple Pricing
@@ -234,33 +234,36 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   )
 }
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <motion.div 
-      className="p-6 rounded-lg border bg-card"
+      className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all"
       variants={fadeIn}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
         {icon}
       </div>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <h3 className="font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
     </motion.div>
   )
 }
 
 function TestimonialCard({ quote, author, role }: { quote: string; author: string; role: string }) {
   return (
-    <motion.div className="p-6 rounded-lg border bg-card" variants={fadeIn}>
-      <p className="mb-4 text-muted-foreground">"{quote}"</p>
-      <p className="font-semibold">{author}</p>
-      <p className="text-sm text-muted-foreground">{role}</p>
+    <motion.div 
+      className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm"
+      variants={fadeIn}
+    >
+      <p className="mb-4 text-gray-600 dark:text-gray-400 italic">"{quote}"</p>
+      <p className="font-semibold text-gray-900 dark:text-white">{author}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400">{role}</p>
     </motion.div>
   )
 }
@@ -280,24 +283,34 @@ function PricingCard({
 }) {
   return (
     <motion.div 
-      className={`p-6 rounded-lg border ${highlighted ? "border-primary shadow-lg" : "bg-card"}`}
+      className={`p-6 rounded-xl border ${
+        highlighted 
+          ? "border-blue-500 dark:border-blue-400 shadow-lg" 
+          : "border-gray-200 dark:border-gray-800"
+      } bg-white dark:bg-gray-900`}
       variants={fadeIn}
     >
-      <h3 className="font-semibold mb-2">{title}</h3>
+      <h3 className="font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
       <div className="mb-4">
-        <span className="text-3xl font-bold">{price}</span>
-        <span className="text-muted-foreground">{period}</span>
+        <span className="text-3xl font-bold text-gray-900 dark:text-white">{price}</span>
+        <span className="text-gray-600 dark:text-gray-400">{period}</span>
       </div>
       <ul className="space-y-2 mb-6">
         {features.map((feature, i) => (
-          <li key={i} className="text-sm flex items-center gap-2">
-            <ArrowRight className="w-4 h-4 text-primary" />
+          <li key={i} className="text-sm flex items-center gap-2 text-gray-600 dark:text-gray-400">
+            <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             {feature}
           </li>
         ))}
       </ul>
       <Link href="/auth">
-        <Button className="w-full" variant={highlighted ? "default" : "outline"}>
+        <Button 
+          className={`w-full ${
+            highlighted 
+              ? "bg-blue-600 hover:bg-blue-700 text-white" 
+              : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+          }`}
+        >
           Get Started
         </Button>
       </Link>
