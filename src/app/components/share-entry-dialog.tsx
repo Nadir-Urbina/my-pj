@@ -5,19 +5,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, Mail, Share2, UserPlus } from "lucide-react"
+import { Users, Share2, UserPlus } from "lucide-react"
 import { db } from "@/lib/firebase"
-import { collection, query, where, getDocs, limit } from "firebase/firestore"
+import { collection, query, where, getDocs, limit, doc, getDoc, updateDoc } from "firebase/firestore"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/components/ui/use-toast"
-import { addDoc, serverTimestamp } from "firebase/firestore"
+import { serverTimestamp } from "firebase/firestore"
 
 interface User {
   id: string
   email: string
   displayName: string
   photoURL: string
+}
+
+interface TeamMember {
+  userId: string
+  email: string
+  role: string
 }
 
 interface Team {
@@ -44,7 +50,6 @@ export function ShareEntryDialog({ entryId }: { entryId: string }) {
       const usersRef = collection(db, "users")
       const q = searchQuery.toLowerCase()
       
-      // Simple email search
       const emailQueryRef = query(
         usersRef,
         where("email", ">=", q),
@@ -64,6 +69,125 @@ export function ShareEntryDialog({ entryId }: { entryId: string }) {
       setUsers([])
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleShareWithUser = async (userId: string, userEmail: string) => {
+    try {
+      toast({
+        title: "Sharing...",
+        description: "Please wait while we share the entry.",
+        duration: 2000,
+      })
+
+      // Get the journal entry
+      const journalRef = doc(db, "journals", entryId)
+      const journalSnap = await getDoc(journalRef)
+      
+      if (!journalSnap.exists()) {
+        throw new Error("Journal entry not found")
+      }
+
+      const journalData = journalSnap.data()
+      
+      // Check if already shared
+      if (journalData.sharedWith?.[userId]?.status === 'active') {
+        toast({
+          title: "Already shared",
+          description: `This entry is already shared with ${userEmail}`,
+          duration: 3000,
+        })
+        return
+      }
+
+      // Update the journal entry with new sharing info
+      await updateDoc(journalRef, {
+        [`sharedWith.${userId}`]: {
+          email: userEmail,
+          sharedAt: serverTimestamp(),
+          status: 'active'
+        }
+      })
+
+      // Clear the search
+      setSearchQuery("")
+      setUsers([])
+      
+      toast({
+        title: "Success!",
+        description: `Entry shared with ${userEmail}`,
+        duration: 3000,
+      })
+
+    } catch (error) {
+      console.error("Error in handleShareWithUser:", error)
+      toast({
+        title: "Error",
+        description: "Failed to share the entry. Please try again.",
+        duration: 3000,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleShareWithTeam = async (teamId: string, teamName: string) => {
+    try {
+      toast({
+        title: "Sharing...",
+        description: "Please wait while we share with the team.",
+        duration: 2000,
+      })
+
+      // Get the journal entry
+      const journalRef = doc(db, "journals", entryId)
+      const journalSnap = await getDoc(journalRef)
+      
+      if (!journalSnap.exists()) {
+        throw new Error("Journal entry not found")
+      }
+
+      // Get team members
+      const teamRef = doc(db, "teams", teamId)
+      const teamSnap = await getDoc(teamRef)
+      
+      if (!teamSnap.exists()) {
+        throw new Error("Team not found")
+      }
+
+      const teamData = teamSnap.data()
+      const teamMembers = teamData.members || [] as TeamMember[]
+
+      // Prepare sharing updates for all team members
+      const sharingUpdates: { [key: string]: any } = {}
+      teamMembers.forEach((member: TeamMember) => {
+        if (member.userId !== user?.uid) {
+          sharingUpdates[`sharedWith.${member.userId}`] = {
+            email: member.email, // Assuming email is stored in team member data
+            sharedAt: serverTimestamp(),
+            status: 'active',
+            sharedViaTeam: teamId,
+            teamName: teamName
+          }
+        }
+      })
+
+      // Update the journal entry with team sharing info
+      await updateDoc(journalRef, sharingUpdates)
+      
+      toast({
+        title: "Success!",
+        description: `Entry shared with team "${teamName}"`,
+        duration: 3000,
+      })
+
+    } catch (error) {
+      console.error("Error in handleShareWithTeam:", error)
+      toast({
+        title: "Error",
+        description: "Failed to share with team. Please try again.",
+        duration: 3000,
+        variant: "destructive",
+      })
     }
   }
 
@@ -88,96 +212,10 @@ export function ShareEntryDialog({ entryId }: { entryId: string }) {
       setTeams(teamsData)
     } catch (error) {
       console.error("Error fetching teams:", error)
-    }
-  }
-
-  const handleShareWithUser = async (userId: string, userEmail: string) => {
-    try {
-      console.log("Starting share process...")  // Debug log
-      
-      toast({
-        title: "Sharing...",
-        description: "Please wait while we share the entry.",
-        duration: 2000,
-      })
-      console.log("After first toast")  // Debug log
-
-      // Check if entry is already shared with this user
-      const sharedEntriesRef = collection(db, "sharedEntries")
-      const q = query(
-        sharedEntriesRef,
-        where("entryId", "==", entryId),
-        where("sharedWith", "==", userId),
-        where("status", "==", "active")
-      )
-      
-      const existingShares = await getDocs(q)
-      
-      if (!existingShares.empty) {
-        toast({
-          title: "Already shared",
-          description: `This entry is already shared with ${userEmail}`,
-          duration: 3000,
-          variant: "default",
-        })
-        return
-      }
-
-      // Create new share
-      await addDoc(sharedEntriesRef, {
-        entryId,
-        sharedBy: user?.uid,
-        sharedWith: userId,
-        sharedWithEmail: userEmail,
-        type: 'user',
-        createdAt: serverTimestamp(),
-        status: 'active'
-      })
-
-      // Clear the search input and results
-      setSearchQuery?.("")
-      setUsers([])
-      
-      // Show success message
-      toast({
-        title: "Success!",
-        description: `Entry shared with ${userEmail}`,
-        duration: 3000,
-        variant: "default",
-      })
-
-    } catch (error) {
-      console.error("Error in handleShareWithUser:", error)  // More detailed error
       toast({
         title: "Error",
-        description: "Failed to share the entry. Please try again.",
+        description: "Failed to load teams. Please try again.",
         duration: 3000,
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleShareWithTeam = async (teamId: string, teamName: string) => {
-    try {
-      await addDoc(collection(db, "sharedEntries"), {
-        entryId,
-        sharedBy: user?.uid,
-        teamId,
-        teamName,
-        type: 'team',
-        createdAt: serverTimestamp(),
-        status: 'active'
-      })
-
-      toast({
-        title: "Entry shared",
-        description: `The journal entry has been shared with ${teamName}.`,
-      })
-    } catch (error) {
-      console.error("Error sharing entry with team:", error)
-      toast({
-        title: "Error",
-        description: "Failed to share the entry with the team.",
         variant: "destructive",
       })
     }

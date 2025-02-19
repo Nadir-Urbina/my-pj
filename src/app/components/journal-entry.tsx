@@ -295,17 +295,15 @@ export function JournalEntry({ initialData, mode = 'create' }: JournalEntryProps
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>New Journal Entry</CardTitle>
-        <div className="flex justify-end mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsPreview(!isPreview)}
-          >
-            {isPreview ? "Edit" : "Preview"}
-          </Button>
-        </div>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle className="text-xl">New Entry</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsPreview(!isPreview)}
+        >
+          {isPreview ? "Edit" : "Preview"}
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <Input 
@@ -437,11 +435,11 @@ export function JournalEntry({ initialData, mode = 'create' }: JournalEntryProps
             </div>
           </div>
         )}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             onClick={toggleRecording}
             variant={isRecording ? "destructive" : "default"}
-            className="flex items-center"
+            className="w-full sm:w-auto flex items-center justify-center"
           >
             {isRecording ? (
               <Square className="mr-2 h-4 w-4 fill-current" />
@@ -450,17 +448,25 @@ export function JournalEntry({ initialData, mode = 'create' }: JournalEntryProps
             )}
             {isRecording ? `Stop Recording (${recordingTime}s)` : "Start Recording"}
           </Button>
-          <Button onClick={handleImageUpload} variant="outline" className="flex items-center">
+          <Button 
+            onClick={handleImageUpload} 
+            variant="outline" 
+            className="w-full sm:w-auto flex items-center justify-center"
+          >
             <ImageIcon className="mr-2 h-4 w-4" />
             Attach Image
           </Button>
-          <div className="flex-1 flex items-center space-x-2">
-            <Input placeholder="Add a category" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
-            <Button onClick={addCategory} variant="outline" className="flex items-center">
-              <Tag className="mr-2 h-4 w-4" />
-              Add
-            </Button>
-          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Input 
+            placeholder="Add a category" 
+            value={newCategory} 
+            onChange={(e) => setNewCategory(e.target.value)} 
+          />
+          <Button onClick={addCategory} variant="outline" className="flex items-center">
+            <Tag className="mr-2 h-4 w-4" />
+            Add
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           {categories.map((category, index) => (
@@ -469,17 +475,11 @@ export function JournalEntry({ initialData, mode = 'create' }: JournalEntryProps
             </span>
           ))}
         </div>
-        <div className="flex gap-2">
-          {mode === 'edit' && (
-            <ShareDialog 
-              entryId={initialData.id} 
-              entryTitle={title}
-            />
-          )}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
           {mode === 'create' && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <X className="mr-2 h-4 w-4" />
                   Discard
                 </Button>
@@ -527,7 +527,7 @@ export function JournalEntry({ initialData, mode = 'create' }: JournalEntryProps
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button 
-                className="flex-1"
+                className="w-full sm:w-auto"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -535,7 +535,7 @@ export function JournalEntry({ initialData, mode = 'create' }: JournalEntryProps
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                {isLoading ? "Saving..." : mode === 'edit' ? "Update Entry" : "Save Entry"}
+                {isLoading ? "Saving..." : mode === 'edit' ? "Update" : "Save"}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
