@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/components/ui/use-toast"
 import { serverTimestamp } from "firebase/firestore"
+import { getUserProfile } from "@/lib/firebase/user-profile"
+import { useToast } from "@/components/ui/use-toast"
 
 interface User {
   id: string
@@ -32,12 +34,19 @@ interface Team {
   members: { userId: string; role: string }[]
 }
 
-export function ShareEntryDialog({ entryId }: { entryId: string }) {
+interface ShareEntryDialogProps {
+  entryId: string
+  onShareSuccess?: () => void
+}
+
+export function ShareEntryDialog({ entryId, onShareSuccess }: ShareEntryDialogProps) {
+  const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
   const [users, setUsers] = useState<User[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
+  const [open, setOpen] = useState(false)
 
   const searchUsers = async (searchQuery: string) => {
     if (searchQuery.length < 3) {
@@ -74,58 +83,40 @@ export function ShareEntryDialog({ entryId }: { entryId: string }) {
 
   const handleShareWithUser = async (userId: string, userEmail: string) => {
     try {
-      toast({
-        title: "Sharing...",
-        description: "Please wait while we share the entry.",
-        duration: 2000,
-      })
-
-      // Get the journal entry
-      const journalRef = doc(db, "journals", entryId)
-      const journalSnap = await getDoc(journalRef)
+      const userProfile = await getUserProfile(userId)
       
-      if (!journalSnap.exists()) {
-        throw new Error("Journal entry not found")
-      }
-
-      const journalData = journalSnap.data()
-      
-      // Check if already shared
-      if (journalData.sharedWith?.[userId]?.status === 'active') {
-        toast({
-          title: "Already shared",
-          description: `This entry is already shared with ${userEmail}`,
-          duration: 3000,
-        })
-        return
-      }
-
-      // Update the journal entry with new sharing info
-      await updateDoc(journalRef, {
+      await updateDoc(doc(db, "journals", entryId), {
         [`sharedWith.${userId}`]: {
           email: userEmail,
           sharedAt: serverTimestamp(),
-          status: 'active'
+          status: 'active',
+          sharedByEmail: user?.email,
+          userId: userId,
+          photoURL: userProfile?.photoURL
         }
       })
 
-      // Clear the search
-      setSearchQuery("")
-      setUsers([])
-      
       toast({
-        title: "Success!",
-        description: `Entry shared with ${userEmail}`,
+        title: "Success",
+        description: `Journal shared with ${userEmail}`,
         duration: 3000,
       })
+      
+      if (onShareSuccess) {
+        onShareSuccess()
+      }
+
+      setTimeout(() => {
+        setOpen(false)
+      }, 500)
 
     } catch (error) {
-      console.error("Error in handleShareWithUser:", error)
+      console.error("Error sharing journal:", error)
       toast({
         title: "Error",
-        description: "Failed to share the entry. Please try again.",
-        duration: 3000,
+        description: "Failed to share journal. Please try again.",
         variant: "destructive",
+        duration: 3000,
       })
     }
   }
@@ -236,7 +227,7 @@ export function ShareEntryDialog({ entryId }: { entryId: string }) {
   }, [user])
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Share2 className="h-4 w-4 mr-2" />
@@ -278,18 +269,21 @@ export function ShareEntryDialog({ entryId }: { entryId: string }) {
             <div className="space-y-2">
               {users.length > 0 ? (
                 users.map(user => (
-                  <div key={user.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-accent">
-                    <div className="flex items-center space-x-3">
+                  <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
+                    <div className="flex items-center gap-2">
                       <Avatar>
                         <AvatarImage src={user.photoURL} />
-                        <AvatarFallback>{user.displayName?.[0] || user.email[0]}</AvatarFallback>
+                        <AvatarFallback>{user.email[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{user.displayName}</p>
+                        <p className="font-medium">{user.displayName || user.email}</p>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => handleShareWithUser(user.id, user.email)}>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleShareWithUser(user.id, user.email)}
+                    >
                       Share
                     </Button>
                   </div>

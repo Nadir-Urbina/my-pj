@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { db } from "@/lib/firebase"
 import { collection, query, where, orderBy, getDocs, getDoc, doc } from "firebase/firestore"
@@ -10,6 +10,9 @@ import Link from "next/link"
 import { FileText, Image as ImageIcon, AudioWaveform, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { ShareEntryDialog } from "../components/share-entry-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { getUserProfile } from "@/lib/firebase/user-profile"
 
 interface JournalEntry {
   id: string
@@ -24,6 +27,9 @@ interface JournalEntry {
       email: string
       sharedAt: any
       status: 'active' | 'inactive'
+      sharedByEmail?: string
+      photoURL?: string
+      userId: string
     }
   }
 }
@@ -49,49 +55,85 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { user } = useAuth()
   const router = useRouter()
+  const [userProfiles, setUserProfiles] = useState<{[key: string]: any}>({})
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      if (!user) return
+  const fetchEntries = useCallback(async () => {
+    if (!user) return
 
-      // Fetch both owned and shared entries in a single query
-      const entriesQuery = query(
+    try {
+      // Get entries created by the user
+      const userEntriesQuery = query(
         collection(db, "journals"),
         where("userId", "==", user.uid)
-        // No need for OR query as we'll fetch shared entries separately for now
       )
-
+      
+      // Get entries shared with the user
       const sharedEntriesQuery = query(
         collection(db, "journals"),
         where(`sharedWith.${user.uid}.status`, "==", "active")
       )
 
-      const [ownedSnapshot, sharedSnapshot] = await Promise.all([
-        getDocs(entriesQuery),
+      const [userSnap, sharedSnap] = await Promise.all([
+        getDocs(userEntriesQuery),
         getDocs(sharedEntriesQuery)
       ])
 
-      const ownedEntries = ownedSnapshot.docs.map(doc => ({
+      const userEntries = userSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as JournalEntry[]
 
-      const sharedEntries = sharedSnapshot.docs.map(doc => ({
+      const sharedEntries = sharedSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as JournalEntry[]
 
-      setEntries([...ownedEntries, ...sharedEntries])
+      setEntries([...userEntries, ...sharedEntries])
+    } catch (error) {
+      console.error("Error fetching entries:", error)
     }
-
-    fetchEntries()
   }, [user])
+
+  useEffect(() => {
+    fetchEntries()
+  }, [fetchEntries])
 
   const privateEntries = entries.filter(entry => entry.userId === user?.uid)
   const sharedWithMeEntries = entries.filter(entry => 
     entry.userId !== user?.uid && 
     entry.sharedWith?.[user?.uid!]?.status === 'active'
   )
+
+  const fetchUserProfiles = async (userIds: string[]) => {
+    const profiles: {[key: string]: any} = {}
+    for (const userId of userIds) {
+      try {
+        const profile = await getUserProfile(userId)
+        if (profile) {
+          profiles[userId] = profile
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+      }
+    }
+    setUserProfiles(profiles)
+  }
+
+  useEffect(() => {
+    const sharedUserIds = entries.flatMap(entry => 
+      Object.entries(entry.sharedWith || {})
+        .filter(([_, share]) => share.status === 'active')
+        .map(([userId]) => userId)
+    )
+    
+    if (sharedUserIds.length > 0) {
+      fetchUserProfiles([...new Set(sharedUserIds)])
+    }
+  }, [entries])
+
+  const refreshEntries = useCallback(() => {
+    fetchEntries()
+  }, [])
 
   return (
     <div className="container py-6">
@@ -122,8 +164,11 @@ export default function DashboardPage() {
             .filter(entry => entry.title.toLowerCase().includes(searchQuery.toLowerCase()))
             .map((entry) => (
               <div key={entry.id} className="border rounded-lg p-4 flex flex-col relative">
-                <div className="absolute top-4 right-4 z-10">
-                  <ShareEntryDialog entryId={entry.id} />
+                <div className="absolute top-4 right-4">
+                  <ShareEntryDialog 
+                    entryId={entry.id} 
+                    onShareSuccess={refreshEntries}
+                  />
                 </div>
 
                 <div 
@@ -131,7 +176,39 @@ export default function DashboardPage() {
                   onClick={() => router.push(`/dashboard/${entry.id}`)}
                 >
                   <div className="space-y-1">
-                    <h2 className="text-xl font-semibold pr-12">{entry.title}</h2>
+                    <h2 className="text-xl font-semibold">{entry.title}</h2>
+                    
+                    {/* Shared with avatars */}
+                    {Object.keys(entry.sharedWith || {}).length > 0 && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-sm text-gray-500">Shared with:</span>
+                        <div className="flex -space-x-2">
+                          {Object.entries(entry.sharedWith || {})
+                            .filter(([_, share]) => share.status === 'active')
+                            .map(([uid, share]) => (
+                              <TooltipProvider key={uid}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Avatar className="h-6 w-6 border-2 border-background">
+                                      <AvatarImage 
+                                        src={userProfiles[share.userId]?.photoURL} 
+                                        alt={share.email} 
+                                      />
+                                      <AvatarFallback>
+                                        {share.email?.[0]?.toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Shared with {share.email}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
                     <p className="text-sm text-gray-500">
                       {new Date(entry.createdAt?.toDate()).toLocaleDateString()}
                     </p>
@@ -180,12 +257,12 @@ export default function DashboardPage() {
                 <div key={entry.id} className="border rounded-lg p-4 flex flex-col relative bg-muted/30">
                   <div
                     className="cursor-pointer"
-                    onClick={() => router.push(`/dashboard/${entry.entryId}`)}
+                    onClick={() => router.push(`/dashboard/${entry.id}`)}
                   >
                     <div className="space-y-1">
                       <h2 className="text-xl font-semibold pr-12">{entry.title}</h2>
                       <p className="text-sm text-gray-500">
-                        Shared by: {entry.sharedBy}
+                        Shared by: {entry.sharedWith?.[user?.uid!]?.sharedByEmail || 'Unknown'}
                       </p>
                       <p className="text-sm text-gray-500">
                         {new Date(entry.createdAt?.toDate()).toLocaleDateString()}

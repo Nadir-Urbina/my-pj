@@ -8,6 +8,7 @@ import { doc, getDoc } from "firebase/firestore"
 import { JournalEntry } from "@/app/components/journal-entry"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
+import { EntryComments } from "@/app/components/entry-comments"
 
 export default function EntryPage({ params }: { params: { entryId: string } }) {
   const [entry, setEntry] = useState<any>(null)
@@ -54,6 +55,9 @@ export default function EntryPage({ params }: { params: { entryId: string } }) {
       </Button>
       
       <JournalEntry initialData={entry} mode="preview" />
+      <div className="mt-8">
+        <EntryComments entryId={params.entryId} />
+      </div>
     </div>
   )
 } 
