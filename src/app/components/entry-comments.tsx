@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/components/ui/use-toast"
+import { Loader2 } from "lucide-react"
 
 interface Comment {
   id: string
@@ -70,45 +71,58 @@ export function EntryComments({ entryId }: { entryId: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-semibold">Comments</h3>
+    <div className="w-full max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold mb-4">Comments</h2>
       
-      {/* Comment list */}
-      <div className="space-y-4">
-        {comments.map((comment) => (
-          <div key={comment.id} className="flex gap-3 items-start">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={comment.userPhotoURL} />
-              <AvatarFallback>
-                {comment.userEmail[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{comment.userEmail}</span>
-                <span className="text-sm text-muted-foreground">
-                  {comment.createdAt?.toDate().toLocaleDateString()}
-                </span>
-              </div>
-              <p className="text-sm mt-1">{comment.text}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* New comment form */}
-      <div className="space-y-2">
+      {/* Comment input */}
+      <div className="mb-6">
         <Textarea
           placeholder="Add a comment..."
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
+          className="mb-2 min-h-[100px]"
         />
         <Button 
-          onClick={handleSubmitComment}
+          onClick={handleSubmitComment} 
           disabled={isSubmitting || !newComment.trim()}
+          className="w-auto"
         >
-          Add Comment
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Posting...
+            </>
+          ) : (
+            "Add Comment"
+          )}
         </Button>
+      </div>
+      
+      {/* Comments list */}
+      <div className="space-y-4">
+        {comments.length === 0 ? (
+          <p className="text-muted-foreground text-center py-6">No comments yet</p>
+        ) : (
+          comments.map((comment) => (
+            <div key={comment.id} className="border rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={comment.userPhotoURL} />
+                  <AvatarFallback>
+                    {comment.userEmail[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-sm">{comment.userEmail}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {comment.createdAt?.toDate().toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm">{comment.text}</p>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

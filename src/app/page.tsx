@@ -161,37 +161,46 @@ export default function Home() {
           </motion.h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <PricingCard
-              title="Personal"
-              price="Free"
-              features={[
-                "Unlimited journal entries",
-                "Basic formatting tools",
-                "Personal categories",
-                "Cloud backup"
-              ]}
-            />
-            <PricingCard
-              title="Team"
+              title="Personal Pro"
               price="$9.99"
               period="/month"
               features={[
-                "Everything in Personal",
+                "Unlimited journal entries",
+                "Advanced formatting tools",
+                "Personal categories & tags",
+                "Cloud backup & sync",
+                "Advanced search",
+                "Scripture cross-reference",
+                "Email support"
+              ]}
+            />
+            <PricingCard
+              title="Leader"
+              price="$19.99"
+              period="/month"
+              features={[
+                "Everything in Personal Pro",
+                "Create up to 3 teams",
                 "Team collaboration",
                 "Shared categories",
-                "Advanced search",
+                "Basic team analytics",
+                "Custom team templates",
                 "Priority support"
               ]}
               highlighted
             />
             <PricingCard
-              title="Ministry"
-              price="Contact Us"
+              title="Leader Pro+"
+              price="$29.99"
+              period="/month"
               features={[
-                "Everything in Team",
+                "Everything in Leader",
+                "Unlimited teams",
+                "Advanced permission controls",
+                "Pattern recognition insights",
+                "Prophetic verification tracking",
                 "Custom branding",
-                "Advanced analytics",
-                "API access",
-                "Dedicated support"
+                "Dedicated account manager"
               ]}
             />
           </div>
@@ -283,13 +292,18 @@ function PricingCard({
 }) {
   return (
     <motion.div 
-      className={`p-6 rounded-xl border ${
+      className={`p-6 rounded-xl ${
         highlighted 
-          ? "border-blue-500 dark:border-blue-400 shadow-lg" 
-          : "border-gray-200 dark:border-gray-800"
-      } bg-white dark:bg-gray-900`}
+          ? "border-0 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/50 dark:to-purple-900/50 shadow-lg relative before:absolute before:inset-0 before:p-[2px] before:bg-gradient-to-r before:from-blue-500 before:via-purple-500 before:to-pink-500 before:rounded-xl before:-z-10" 
+          : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+      }`}
       variants={fadeIn}
     >
+      {highlighted && (
+        <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs py-1 px-3 rounded-full font-medium">
+          Recommended
+        </span>
+      )}
       <h3 className="font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
       <div className="mb-4">
         <span className="text-3xl font-bold text-gray-900 dark:text-white">{price}</span>
@@ -307,8 +321,8 @@ function PricingCard({
         <Button 
           className={`w-full ${
             highlighted 
-              ? "bg-blue-600 hover:bg-blue-700 text-white" 
-              : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0" 
+              : "bg-blue-600 hover:bg-blue-700 text-white"
           }`}
         >
           Get Started

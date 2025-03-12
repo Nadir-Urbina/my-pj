@@ -8,9 +8,8 @@ import { doc, getDoc } from "firebase/firestore"
 import { JournalEntry } from "@/app/components/journal-entry"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
-import { EntryComments } from "@/app/components/entry-comments"
 
-export default function EntryPage({ params }: { params: { entryId: string } }) {
+export default function EditEntryPage({ params }: { params: { entryId: string } }) {
   const [entry, setEntry] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useAuth()
@@ -45,27 +44,16 @@ export default function EntryPage({ params }: { params: { entryId: string } }) {
 
   return (
     <div className="container py-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/dashboard")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/dashboard/${params.entryId}/edit`)}
-        >
-          Edit
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        className="mb-4"
+        onClick={() => router.push(`/dashboard/${params.entryId}`)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Entry
+      </Button>
       
-      <JournalEntry initialData={entry} mode="preview" />
-      <div className="mt-8">
-        <EntryComments entryId={params.entryId} />
-      </div>
+      <JournalEntry initialData={entry} mode="edit" />
     </div>
   )
 } 
